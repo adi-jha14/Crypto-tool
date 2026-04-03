@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crypto Tool — Hill | Rail Fence | RSA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --card: #141414;
+  --border: #222222;
+  --border2: #2a2a2a;
+  --hill: #38bdf8;
+  --hill2: #0ea5e9;
+  --rail: #4ade80;
+  --rail2: #22c55e;
+  --rsa: #f97316;
+  --rsa2: #ea580c;
+  --text: #e8e8e8;
+  --muted: #555555;
+  --muted2: #888888;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  min-height:100vh;
+}
+
+/* NAV */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,10,10,0.97);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 32px;
+  gap:0;
+}
+.nav-title{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--muted2);
+  padding:20px 0;
+  margin-right:40px;
+  white-space:nowrap;
+}
+.tab{
+  padding:20px 18px;
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  cursor:pointer;
+  border:none;background:none;
+  color:var(--muted);
+  border-bottom:1px solid transparent;
+  transition:all 0.15s;
+  white-space:nowrap;
+}
+.tab:hover{color:var(--muted2);}
+.tab.hill.active{color:var(--hill);border-bottom-color:var(--hill);}
+.tab.rail.active{color:var(--rail);border-bottom-color:var(--rail);}
+.tab.rsa.active{color:var(--rsa);border-bottom-color:var(--rsa);}
+
+/* PANELS */
+.panel{display:none;padding:48px 32px;max-width:860px;margin:0 auto;}
+.panel.active{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.panel-head{margin-bottom:40px;padding-bottom:32px;border-bottom:1px solid var(--border);}
+.panel-head h1{
+  font-family:var(--sans);
+  font-size:20px;
+  font-weight:600;
+  letter-spacing:-0.3px;
+  margin-bottom:8px;
+}
+.panel-head p{color:var(--muted2);font-size:13px;line-height:1.7;font-weight:400;}
+.hill-head h1{color:var(--hill);}
+.rail-head h1{color:var(--rail);}
+.rsa-head h1{color:var(--rsa);}
+
+/* FORM GRID */
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-bottom:24px;
+}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+
+.form-group{display:flex;flex-direction:column;gap:8px;}
+.form-group.full{grid-column:1/-1;}
+
+label{
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-family:var(--mono);
+}
+
+input[type=text],input[type=number]{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:14px;
+  padding:11px 14px;
+  outline:none;
+  transition:border-color 0.15s;
+  width:100%;
+  border-radius:4px;
+}
+input[type=text]::placeholder,input[type=number]::placeholder{color:var(--muted);}
+input:focus{border-color:var(--hill);}
+.rail-panel input:focus{border-color:var(--rail);}
+.rsa-panel input:focus{border-color:var(--rsa);}
+
+.matrix-inputs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.matrix-inputs input{text-align:center;}
+
+.matrix-label{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:1px;
+  color:var(--muted);
+  text-align:center;
+  margin-top:2px;
+}
+
+/* BUTTON */
+.btn{
+  padding:11px 28px;
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  cursor:pointer;
+  border:none;
+  transition:opacity 0.15s;
+  border-radius:4px;
+  margin-top:4px;
+}
+.btn:hover{opacity:0.85;}
+.btn-hill{background:var(--hill);color:#000;}
+.btn-rail{background:var(--rail);color:#000;}
+.btn-rsa{background:var(--rsa);color:#000;}
+
+/* OUTPUT SECTION */
+.output-section{
+  margin-top:40px;
+  border:1px solid var(--border);
+  background:var(--card);
+  border-radius:4px;
+  overflow:hidden;
+  display:none;
+}
+.output-section.visible{display:block;animation:fadeIn 0.3s ease;}
+
+.output-header{
+  padding:12px 20px;
+  border-bottom:1px solid var(--border);
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  display:flex;align-items:center;gap:10px;
+  color:var(--muted2);
+}
+.output-header .dot{width:6px;height:6px;border-radius:50%;}
+
+.output-body{padding:4px 0;}
+
+.out-row{
+  display:grid;
+  grid-template-columns:200px 1fr;
+  gap:16px;
+  padding:12px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  align-items:start;
+}
+.out-row:last-child{border-bottom:none;}
+.out-key{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--muted);
+  padding-top:3px;
+}
+.out-val{
+  font-family:var(--mono);
+  font-size:14px;
+  font-weight:500;
+  word-break:break-all;
+  color:var(--text);
+}
+.out-val.big{font-size:20px;font-weight:600;}
+
+/* Matrix display */
+.matrix-display{
+  display:inline-flex;flex-direction:column;gap:4px;
+  padding:8px 16px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:4px;
+  position:relative;
+  margin:2px 0;
+}
+.matrix-display::before,.matrix-display::after{
+  content:'';position:absolute;top:4px;bottom:4px;width:2px;border:1px solid;
+}
+.matrix-display::before{left:3px;border-right:none;}
+.matrix-display::after{right:3px;border-left:none;}
+.hill-panel .matrix-display::before,
+.hill-panel .matrix-display::after{border-color:rgba(56,189,248,0.4);}
+
+.mrow{display:flex;gap:20px;}
+.mcell{font-size:15px;font-weight:600;min-width:26px;text-align:center;}
+
+/* Rail visualization */
+.rail-viz{
+  margin:12px 0;
+  overflow-x:auto;
+  padding-bottom:6px;
+}
+.rzgrid{display:flex;flex-direction:column;gap:4px;min-width:max-content;}
+.rzrow{display:flex;gap:4px;}
+.rzcell{
+  width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);
+  font-size:13px;font-weight:600;
+  border:1px solid transparent;
+  border-radius:3px;
+}
+.rz0{background:rgba(56,189,248,0.08);border-color:rgba(56,189,248,0.25);color:#38bdf8;}
+.rz1{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.25);color:#4ade80;}
+.rz2{background:rgba(249,115,22,0.08);border-color:rgba(249,115,22,0.25);color:#f97316;}
+.rz3{background:rgba(168,85,247,0.08);border-color:rgba(168,85,247,0.25);color:#a855f7;}
+.rz4{background:rgba(236,72,153,0.08);border-color:rgba(236,72,153,0.25);color:#ec4899;}
+.rzx{opacity:0.08;color:var(--muted);}
+
+.rail-reads{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.rail-read-row{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--mono);
+  font-size:12px;
+}
+.rail-read-label{color:var(--muted);min-width:56px;}
+.rail-read-chars{display:flex;gap:3px;flex-wrap:wrap;}
+.rail-char{
+  width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);
+  font-size:12px;font-weight:600;
+  border-radius:3px;
+}
+
+/* Steps */
+.steps-box{
+  margin:8px 0;
+  border:1px solid var(--border);
+  border-radius:4px;
+  overflow:hidden;
+}
+.step-row{
+  display:flex;gap:0;
+  border-bottom:1px solid var(--border);
+}
+.step-row:last-child{border-bottom:none;}
+.step-n{
+  min-width:40px;
+  background:rgba(255,255,255,0.015);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);
+  font-size:10px;color:var(--muted);
+  border-right:1px solid var(--border);
+  padding:10px;
+}
+.step-text{
+  padding:10px 14px;
+  font-family:var(--mono);
+  font-size:12px;line-height:1.65;flex:1;
+  color:var(--muted2);
+}
+.step-text b{font-weight:600;color:var(--text);}
+
+/* Error */
+.error-msg{
+  color:#f87171;
+  font-family:var(--mono);
+  font-size:12px;
+  margin-top:8px;
+  padding:10px 12px;
+  background:rgba(248,113,113,0.05);
+  border:1px solid rgba(248,113,113,0.15);
+  border-radius:4px;
+  display:none;
+}
+.error-msg.visible{display:block;}
+
+/* Info bar */
+.info-bar{
+  padding:10px 14px;
+  background:rgba(255,255,255,0.025);
+  border:1px solid var(--border);
+  border-radius:4px;
+  font-family:var(--mono);
+  font-size:11px;color:var(--muted2);
+  margin-bottom:24px;
+  line-height:1.65;
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-title">Crypto Tool</div>
+  <button class="tab hill active" onclick="showTab('hill')">Hill Cipher 2×2</button>
+  <button class="tab rail" onclick="showTab('rail')">Rail Fence</button>
+  <button class="tab rsa" onclick="showTab('rsa')">RSA</button>
+</nav>
+
+<!-- ============================= HILL CIPHER ============================= -->
+<div id="hill-panel" class="panel hill-panel active">
+  <div class="panel-head hill-head">
+    <h1>Hill Cipher — 2×2</h1>
+    <p>Enter your plaintext and 2×2 key matrix. The tool will encrypt and show the full step-by-step workings including decryption key.</p>
+  </div>
+
+  <div class="info-bar">
+    ℹ &nbsp;Key matrix must be invertible mod 26 — i.e. det(K) must be coprime with 26. Plaintext will be padded with <b>X</b> if length is odd.
+  </div>
+
+  <div class="form-grid">
+    <div class="form-group full">
+      <label>Plaintext</label>
+      <input type="text" id="h-plain" placeholder="e.g. HELP" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-group">
+      <label>Key Matrix K (row 1)</label>
+      <div class="matrix-inputs">
+        <input type="number" id="h-k00" placeholder="k₁₁" value="3">
+        <input type="number" id="h-k01" placeholder="k₁₂" value="3">
+      </div>
+      <div class="matrix-label">[ k₁₁ &nbsp; k₁₂ ]</div>
+    </div>
+    <div class="form-group">
+      <label>Key Matrix K (row 2)</label>
+      <div class="matrix-inputs">
+        <input type="number" id="h-k10" placeholder="k₂₁" value="2">
+        <input type="number" id="h-k11" placeholder="k₂₂" value="5">
+      </div>
+      <div class="matrix-label">[ k₂₁ &nbsp; k₂₂ ]</div>
+    </div>
+  </div>
+
+  <div class="error-msg" id="h-error"></div>
+  <button class="btn btn-hill" onclick="runHill()">ENCRYPT →</button>
+
+  <div class="output-section" id="h-output">
+    <div class="output-header">
+      <div class="dot" style="background:var(--hill)"></div>
+      Hill Cipher Output
+    </div>
+    <div class="output-body" id="h-output-body"></div>
+  </div>
+</div>
+
+<!-- ============================= RAIL FENCE ============================= -->
+<div id="rail-panel" class="panel rail-panel">
+  <div class="panel-head rail-head">
+    <h1>Rail Fence Cipher</h1>
+    <p>Enter your plaintext and number of rails. The zigzag pattern and each rail's characters will be shown visually.</p>
+  </div>
+
+  <div class="info-bar">
+    ℹ &nbsp;Minimum 2 rails. Non-alpha characters are stripped. Uppercase conversion is automatic. Use <b>Decrypt</b> mode to reverse a Rail Fence ciphertext.
+  </div>
+
+  <div class="form-grid">
+    <div class="form-group full">
+      <label>Mode</label>
+      <div style="display:flex;gap:10px;margin-top:2px;">
+        <button id="rail-mode-enc" class="btn btn-rail" style="padding:8px 20px;font-size:10px;opacity:1;" onclick="setRailMode('enc')">ENCRYPT</button>
+        <button id="rail-mode-dec" class="btn" style="padding:8px 20px;font-size:10px;background:var(--surface);color:var(--rail);border:1px solid var(--rail);opacity:0.55;" onclick="setRailMode('dec')">DECRYPT</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label id="r-plain-label">Plaintext</label>
+      <input type="text" id="r-plain" placeholder="e.g. CRYPTOGRAPHY" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-group">
+      <label>Number of Rails</label>
+      <input type="number" id="r-rails" placeholder="e.g. 3" min="2" max="10" value="3">
+    </div>
+  </div>
+
+  <div class="error-msg" id="r-error"></div>
+  <button class="btn btn-rail" id="r-run-btn" onclick="runRail()">ENCRYPT →</button>
+
+  <div class="output-section" id="r-output">
+    <div class="output-header">
+      <div class="dot" style="background:var(--rail)"></div>
+      Rail Fence Output
+    </div>
+    <div class="output-body" id="r-output-body"></div>
+  </div>
+</div>
+
+<!-- ============================= RSA ============================= -->
+<div id="rsa-panel" class="panel rsa-panel">
+  <div class="panel-head rsa-head">
+    <h1>RSA Encryption</h1>
+    <p>Enter two primes p and q, a public exponent e, and your message M. The tool computes n, φ(n), d, encrypts and decrypts with full steps.</p>
+  </div>
+
+  <div class="info-bar">
+    ℹ &nbsp;p and q must be prime. e must satisfy 1 &lt; e &lt; φ(n) and gcd(e, φ(n)) = 1. Enter a <b>character/text</b> to auto-fill M, or type M directly. Each character is encrypted separately when text is entered.
+  </div>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Prime p</label>
+      <input type="number" id="rsa-p" placeholder="e.g. 61" value="61">
+    </div>
+    <div class="form-group">
+      <label>Prime q</label>
+      <input type="number" id="rsa-q" placeholder="e.g. 53" value="53">
+    </div>
+    <div class="form-group">
+      <label>Public Exponent e</label>
+      <input type="number" id="rsa-e" placeholder="e.g. 17" value="17">
+    </div>
+    <div class="form-group">
+      <label>Message M (number)</label>
+      <input type="number" id="rsa-m" placeholder="e.g. 65" value="65">
+    </div>
+    <div class="form-group full" style="margin-top:-8px;">
+      <label>— or — Character / Text Input (auto-converts to ASCII codes)</label>
+      <input type="text" id="rsa-char" placeholder="e.g. Hi or A  →  auto-fills M above" oninput="rsaCharInput(this.value)">
+    </div>
+  </div>
+
+  <div class="error-msg" id="rsa-error"></div>
+  <button class="btn btn-rsa" onclick="runRSA()">COMPUTE →</button>
+
+  <div class="output-section" id="rsa-output">
+    <div class="output-header">
+      <div class="dot" style="background:var(--rsa)"></div>
+      RSA Output
+    </div>
+    <div class="output-body" id="rsa-output-body"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   TAB SWITCHING
+========================================================= */
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(name + '-panel').classList.add('active');
+  document.querySelector('.tab.' + name).classList.add('active');
+}
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+function mod(a, m) { return ((a % m) + m) % m; }
+
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
+}
+
+function modInverse(a, m) {
+  let [old_r, r] = [a, m];
+  let [old_s, s] = [1, 0];
+  while (r !== 0) {
+    const q = Math.floor(old_r / r);
+    [old_r, r] = [r, old_r - q * r];
+    [old_s, s] = [s, old_s - q * s];
+  }
+  if (old_r !== 1) return null;
+  return mod(old_s, m);
+}
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n < 4) return true;
+  if (n % 2 === 0 || n % 3 === 0) return false;
+  for (let i = 5; i * i <= n; i += 6)
+    if (n % i === 0 || n % (i + 2) === 0) return false;
+  return true;
+}
+
+function modpow(base, exp, mod) {
+  let result = 1n;
+  base = BigInt(base) % BigInt(mod);
+  exp = BigInt(exp);
+  mod = BigInt(mod);
+  while (exp > 0n) {
+    if (exp % 2n === 1n) result = result * base % mod;
+    exp = exp >> 1n;
+    base = base * base % mod;
+  }
+  return Number(result);
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('visible');
+}
+function hideError(id) {
+  document.getElementById(id).classList.remove('visible');
+}
+
+function outRow(key, valHtml) {
+  return `<div class="out-row"><div class="out-key">${key}</div><div class="out-val">${valHtml}</div></div>`;
+}
+
+function matrixHTML(m, color) {
+  return `<div class="matrix-display">
+    <div class="mrow"><span class="mcell" style="color:${color}">${m[0][0]}</span><span class="mcell" style="color:${color}">${m[0][1]}</span></div>
+    <div class="mrow"><span class="mcell" style="color:${color}">${m[1][0]}</span><span class="mcell" style="color:${color}">${m[1][1]}</span></div>
+  </div>`;
+}
+
+/* =========================================================
+   HILL CIPHER
+========================================================= */
+function runHill() {
+  hideError('h-error');
+  let plain = document.getElementById('h-plain').value.toUpperCase().replace(/[^A-Z]/g, '');
+  const k = [
+    [parseInt(document.getElementById('h-k00').value), parseInt(document.getElementById('h-k01').value)],
+    [parseInt(document.getElementById('h-k10').value), parseInt(document.getElementById('h-k11').value)]
+  ];
+
+  if (!plain) return showError('h-error', 'Please enter plaintext.');
+  if (k.some(r => r.some(v => isNaN(v)))) return showError('h-error', 'All key matrix values must be numbers.');
+
+  const det = mod(k[0][0]*k[1][1] - k[0][1]*k[1][0], 26);
+  if (gcd(det, 26) !== 1) return showError('h-error', `Key matrix is not invertible mod 26. det = ${det}, gcd(${det}, 26) = ${gcd(det, 26)} ≠ 1. Try different key values.`);
+
+  if (plain.length % 2 !== 0) plain += 'X';
+
+  let cipher = '';
+  const blocks = [];
+  for (let i = 0; i < plain.length; i += 2) {
+    const a = plain.charCodeAt(i) - 65;
+    const b = plain.charCodeAt(i+1) - 65;
+    const c1 = mod(k[0][0]*a + k[0][1]*b, 26);
+    const c2 = mod(k[1][0]*a + k[1][1]*b, 26);
+    blocks.push({pair: plain[i]+plain[i+1], nums:[a,b], out:[c1,c2], outChars: String.fromCharCode(c1+65)+String.fromCharCode(c2+65)});
+    cipher += String.fromCharCode(c1+65) + String.fromCharCode(c2+65);
+  }
+
+  const detInv = modInverse(det, 26);
+  const adj = [[k[1][1], -k[0][1]], [-k[1][0], k[0][0]]];
+  const kinv = adj.map(r => r.map(v => mod(detInv * v, 26)));
+
+  let decrypted = '';
+  for (let i = 0; i < cipher.length; i += 2) {
+    const a = cipher.charCodeAt(i) - 65;
+    const b = cipher.charCodeAt(i+1) - 65;
+    const c1 = mod(kinv[0][0]*a + kinv[0][1]*b, 26);
+    const c2 = mod(kinv[1][0]*a + kinv[1][1]*b, 26);
+    decrypted += String.fromCharCode(c1+65) + String.fromCharCode(c2+65);
+  }
+
+  let stepsHTML = '<div class="steps-box">';
+  blocks.forEach((bl, i) => {
+    stepsHTML += `<div class="step-row">
+      <div class="step-n">${i+1}</div>
+      <div class="step-text">
+        Block <b style="color:#38bdf8">${bl.pair}</b> → [${bl.nums[0]}, ${bl.nums[1]}]
+        &nbsp;→&nbsp;
+        [${k[0][0]}×${bl.nums[0]} + ${k[0][1]}×${bl.nums[1]} = ${k[0][0]*bl.nums[0]+k[0][1]*bl.nums[1]} ≡ <b style="color:#38bdf8">${bl.out[0]}</b>,
+        &nbsp;${k[1][0]}×${bl.nums[0]} + ${k[1][1]}×${bl.nums[1]} = ${k[1][0]*bl.nums[0]+k[1][1]*bl.nums[1]} ≡ <b style="color:#38bdf8">${bl.out[1]}</b>] mod 26
+        &nbsp;→&nbsp; <b style="color:#7dd3fc">${bl.outChars}</b>
+      </div>
+    </div>`;
+  });
+  stepsHTML += '</div>';
+
+  const body = document.getElementById('h-output-body');
+  body.innerHTML = [
+    outRow('Plaintext', `<span style="color:#e2e8f0">${plain}</span>`),
+    outRow('Key Matrix K', matrixHTML(k, '#38bdf8')),
+    outRow('det(K) mod 26', `<span style="color:#38bdf8">${det}</span> &nbsp;·&nbsp; det⁻¹ mod 26 = <span style="color:#38bdf8">${detInv}</span>`),
+    `<div class="out-row"><div class="out-key">Encryption Steps</div><div class="out-val" style="font-size:12px">${stepsHTML}</div></div>`,
+    outRow('Ciphertext', `<span class="big" style="color:#38bdf8">${cipher}</span>`),
+    outRow('Inverse Key K⁻¹', matrixHTML(kinv, '#7dd3fc')),
+    outRow('Decrypted', `<span class="big" style="color:#4ade80">${decrypted} ✓</span>`),
+  ].join('');
+
+  document.getElementById('h-output').classList.add('visible');
+}
+
+/* =========================================================
+   RAIL FENCE — mode toggle
+========================================================= */
+let railMode = 'enc';
+function setRailMode(m) {
+  railMode = m;
+  const encBtn = document.getElementById('rail-mode-enc');
+  const decBtn = document.getElementById('rail-mode-dec');
+  const label  = document.getElementById('r-plain-label');
+  const runBtn = document.getElementById('r-run-btn');
+  if (m === 'enc') {
+    encBtn.style.opacity = '1'; encBtn.style.background = 'var(--rail)'; encBtn.style.color = '#000'; encBtn.style.border = 'none';
+    decBtn.style.opacity = '0.55'; decBtn.style.background = 'var(--surface)'; decBtn.style.color = 'var(--rail)'; decBtn.style.border = '1px solid var(--rail)';
+    label.textContent = 'Plaintext';
+    document.getElementById('r-plain').placeholder = 'e.g. CRYPTOGRAPHY';
+    runBtn.textContent = 'ENCRYPT →';
+  } else {
+    decBtn.style.opacity = '1'; decBtn.style.background = 'var(--rail)'; decBtn.style.color = '#000'; decBtn.style.border = 'none';
+    encBtn.style.opacity = '0.55'; encBtn.style.background = 'var(--surface)'; encBtn.style.color = 'var(--rail)'; encBtn.style.border = '1px solid var(--rail)';
+    label.textContent = 'Ciphertext';
+    document.getElementById('r-plain').placeholder = 'e.g. CYAHRPGRTOP';
+    runBtn.textContent = 'DECRYPT →';
+  }
+  document.getElementById('r-output').classList.remove('visible');
+  hideError('r-error');
+}
+
+/* Build rail position map — shared by encrypt & decrypt */
+function buildRailPositions(n, rails) {
+  const posArr = new Array(n);
+  let r = 0, dir = 1;
+  for (let i = 0; i < n; i++) {
+    posArr[i] = r;
+    if (r === 0) dir = 1;
+    if (r === rails - 1) dir = -1;
+    r += dir;
+  }
+  return posArr;
+}
+
+function railFenceEncrypt(plain, rails) {
+  const n = plain.length;
+  const posArr = buildRailPositions(n, rails);
+  const railArr = Array.from({length: rails}, () => []);
+  for (let i = 0; i < n; i++) railArr[posArr[i]].push({char: plain[i], pos: i});
+  const cipher = railArr.map(row => row.map(x => x.char).join('')).join('');
+  return {cipher, railArr, posArr};
+}
+
+function railFenceDecrypt(cipher, rails) {
+  const n = cipher.length;
+  const posArr = buildRailPositions(n, rails);
+
+  // Count how many chars go on each rail
+  const railLens = new Array(rails).fill(0);
+  for (let i = 0; i < n; i++) railLens[posArr[i]]++;
+
+  // Slice ciphertext into rails
+  const railArr = [];
+  let idx = 0;
+  for (let ri = 0; ri < rails; ri++) {
+    railArr.push(cipher.slice(idx, idx + railLens[ri]).split(''));
+    idx += railLens[ri];
+  }
+
+  // Re-assemble by reading rails in zigzag order
+  const railIdx = new Array(rails).fill(0);
+  let plain = '';
+  for (let i = 0; i < n; i++) {
+    const ri = posArr[i];
+    plain += railArr[ri][railIdx[ri]++];
+  }
+  return {plain, railArr};
+}
+
+function runRail() {
+  hideError('r-error');
+  const input = document.getElementById('r-plain').value.toUpperCase().replace(/[^A-Z]/g, '');
+  const rails  = parseInt(document.getElementById('r-rails').value);
+
+  if (!input) return showError('r-error', `Please enter ${railMode === 'enc' ? 'plaintext' : 'ciphertext'}.`);
+  if (isNaN(rails) || rails < 2) return showError('r-error', 'Rails must be 2 or more.');
+  if (rails >= input.length) return showError('r-error', 'Rails must be less than the text length.');
+
+  if (railMode === 'enc') runRailEncrypt(input, rails);
+  else runRailDecrypt(input, rails);
+}
+
+function buildVizHTML(textForGrid, posArr, railArr, rails) {
+  const n = textForGrid.length;
+  const displayN = Math.min(n, 36);
+  const railColors = ['rz0','rz1','rz2','rz3','rz4'];
+  const railHex = ['#38bdf8','#4ade80','#f97316','#a855f7','#ec4899'];
+
+  let vizHTML = '<div class="rail-viz"><div class="rzgrid">';
+  for (let ri = 0; ri < rails; ri++) {
+    vizHTML += '<div class="rzrow">';
+    for (let ci = 0; ci < displayN; ci++) {
+      if (posArr[ci] === ri) {
+        vizHTML += `<div class="rzcell ${railColors[ri % 5]}">${textForGrid[ci]}</div>`;
+      } else {
+        vizHTML += `<div class="rzcell rzx">·</div>`;
+      }
+    }
+    if (n > 36) vizHTML += `<div class="rzcell rzx">…</div>`;
+    vizHTML += '</div>';
+  }
+  vizHTML += '</div>';
+
+  vizHTML += '<div class="rail-reads">';
+  railArr.forEach((row, ri) => {
+    const chars = Array.isArray(row[0]) ? row : row;
+    const rowChars = chars.map(x => (typeof x === 'object' ? x.char : x));
+    vizHTML += `<div class="rail-read-row">
+      <span class="rail-read-label" style="color:${railHex[ri % 5]}">Rail ${ri}:</span>
+      <div class="rail-read-chars">
+        ${rowChars.map(c => `<div class="rail-char ${railColors[ri % 5]}">${c}</div>`).join('')}
+      </div>
+      <span style="color:var(--muted);margin-left:8px;font-size:11px;">→ <b style="color:${railHex[ri%5]}">${rowChars.join('')}</b></span>
+    </div>`;
+  });
+  vizHTML += '</div></div>';
+  return vizHTML;
+}
+
+function runRailEncrypt(plain, rails) {
+  const {cipher, railArr, posArr} = railFenceEncrypt(plain, rails);
+  const cycleLen = 2 * (rails - 1);
+  const railHex = ['#38bdf8','#4ade80','#f97316','#a855f7','#ec4899'];
+
+  const vizHTML = buildVizHTML(plain, posArr, railArr, rails);
+
+  const stepsHTML = `<div class="steps-box">
+    <div class="step-row"><div class="step-n">1</div><div class="step-text">Cycle length = 2 × (rails − 1) = 2 × ${rails-1} = <b style="color:#4ade80">${cycleLen}</b></div></div>
+    <div class="step-row"><div class="step-n">2</div><div class="step-text">Write <b>${plain}</b> in zigzag across ${rails} rails (see grid above)</div></div>
+    <div class="step-row"><div class="step-n">3</div><div class="step-text">Read off each rail: ${railArr.map((row,ri) => `<span style="color:${railHex[ri%5]}"><b>${row.map(x=>x.char).join('')}</b></span>`).join(' + ')}</div></div>
+    <div class="step-row"><div class="step-n">4</div><div class="step-text">Concatenate → Ciphertext = <b style="color:#4ade80">${cipher}</b></div></div>
+  </div>`;
+
+  const body = document.getElementById('r-output-body');
+  body.innerHTML = [
+    outRow('Plaintext', `<span style="color:#e2e8f0">${plain}</span>`),
+    outRow('Rails', `<span style="color:#4ade80">${rails}</span>`),
+    outRow('Cycle Length', `<span style="color:#4ade80">${cycleLen}</span>`),
+    `<div class="out-row"><div class="out-key">Zigzag Pattern</div><div class="out-val">${vizHTML}</div></div>`,
+    `<div class="out-row"><div class="out-key">Steps</div><div class="out-val" style="font-size:12px">${stepsHTML}</div></div>`,
+    outRow('Ciphertext', `<span class="big" style="color:#4ade80">${cipher}</span>`),
+  ].join('');
+
+  document.getElementById('r-output').classList.add('visible');
+}
+
+function runRailDecrypt(cipher, rails) {
+  const {plain, railArr} = railFenceDecrypt(cipher, rails);
+  const posArr = buildRailPositions(plain.length, rails);
+  const cycleLen = 2 * (rails - 1);
+  const railHex = ['#38bdf8','#4ade80','#f97316','#a855f7','#ec4899'];
+
+  // For the viz we show the recovered plaintext in zigzag order
+  const vizHTML = buildVizHTML(plain, posArr, railArr.map(r => r.map(c => ({char: c}))), rails);
+
+  const stepsHTML = `<div class="steps-box">
+    <div class="step-row"><div class="step-n">1</div><div class="step-text">Cycle length = 2 × (rails − 1) = 2 × ${rails-1} = <b style="color:#4ade80">${cycleLen}</b></div></div>
+    <div class="step-row"><div class="step-n">2</div><div class="step-text">Determine zigzag position of each index across ${rails} rails</div></div>
+    <div class="step-row"><div class="step-n">3</div><div class="step-text">Count chars per rail and slice ciphertext: ${railArr.map((row,ri) => `<span style="color:${railHex[ri%5]}"><b>${row.join('')}</b></span>`).join(' | ')}</div></div>
+    <div class="step-row"><div class="step-n">4</div><div class="step-text">Re-assemble by filling positions back in zigzag order → <b style="color:#4ade80">${plain}</b></div></div>
+  </div>`;
+
+  const body = document.getElementById('r-output-body');
+  body.innerHTML = [
+    outRow('Ciphertext', `<span style="color:#e2e8f0">${cipher}</span>`),
+    outRow('Rails', `<span style="color:#4ade80">${rails}</span>`),
+    outRow('Cycle Length', `<span style="color:#4ade80">${cycleLen}</span>`),
+    `<div class="out-row"><div class="out-key">Reconstructed Grid</div><div class="out-val">${vizHTML}</div></div>`,
+    `<div class="out-row"><div class="out-key">Steps</div><div class="out-val" style="font-size:12px">${stepsHTML}</div></div>`,
+    outRow('Decrypted Plaintext', `<span class="big" style="color:#4ade80">${plain} ✓</span>`),
+  ].join('');
+
+  document.getElementById('r-output').classList.add('visible');
+}
+
+/* =========================================================
+   RSA — character input helper
+========================================================= */
+function rsaCharInput(val) {
+  if (!val) return;
+  // If single char, set M to its ASCII code; if multiple, show first & note
+  const code = val.charCodeAt(0);
+  document.getElementById('rsa-m').value = code;
+}
+
+/* =========================================================
+   RSA
+========================================================= */
+function runRSA() {
+  hideError('rsa-error');
+  const p = parseInt(document.getElementById('rsa-p').value);
+  const q = parseInt(document.getElementById('rsa-q').value);
+  const e = parseInt(document.getElementById('rsa-e').value);
+  const charText = document.getElementById('rsa-char').value;
+  const mRaw = document.getElementById('rsa-m').value;
+
+  if ([p, q, e].some(v => isNaN(v))) return showError('rsa-error', 'p, q, and e are required.');
+  if (!isPrime(p)) return showError('rsa-error', `p = ${p} is not a prime number.`);
+  if (!isPrime(q)) return showError('rsa-error', `q = ${q} is not a prime number.`);
+  if (p === q) return showError('rsa-error', 'p and q must be distinct primes.');
+
+  const n = p * q;
+  const phi = (p - 1) * (q - 1);
+  if (e <= 1 || e >= phi) return showError('rsa-error', `e must be between 1 and φ(n)=${phi}.`);
+  if (gcd(e, phi) !== 1) return showError('rsa-error', `gcd(e, φ(n)) = gcd(${e}, ${phi}) = ${gcd(e,phi)} ≠ 1. Choose a different e.`);
+
+  const d = modInverse(e, phi);
+
+  // Multi-character mode
+  if (charText.length > 1) {
+    const chars = charText.split('');
+    const badChars = chars.filter(c => c.charCodeAt(0) >= n);
+    if (badChars.length > 0) return showError('rsa-error', `Some character codes ≥ n=${n}. Use larger primes or simpler characters.`);
+
+    const rows = chars.map(ch => {
+      const M = ch.charCodeAt(0);
+      const C = modpow(M, e, n);
+      const dec = modpow(C, d, n);
+      return {ch, M, C, dec};
+    });
+
+    const tableRows = rows.map(r =>
+      `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 14px;color:#fb923c;font-weight:600;">${r.ch}</td>
+        <td style="padding:7px 14px;color:#e2e8f0;">${r.M}</td>
+        <td style="padding:7px 14px;color:#f97316;font-weight:600;">${r.C}</td>
+        <td style="padding:7px 14px;color:#4ade80;">${r.dec} ✓</td>
+      </tr>`).join('');
+
+    const tableHTML = `<table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;">
+      <thead><tr style="border-bottom:1px solid var(--border2);">
+        <th style="padding:7px 14px;text-align:left;color:var(--muted);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;">Char</th>
+        <th style="padding:7px 14px;text-align:left;color:var(--muted);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;">M (ASCII)</th>
+        <th style="padding:7px 14px;text-align:left;color:var(--muted);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;">C = M^e mod n</th>
+        <th style="padding:7px 14px;text-align:left;color:var(--muted);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;">Decrypted</th>
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>`;
+
+    const stepsHTML = `<div class="steps-box">
+      <div class="step-row"><div class="step-n">1</div><div class="step-text">n = p × q = ${p} × ${q} = <b style="color:#f97316">${n}</b></div></div>
+      <div class="step-row"><div class="step-n">2</div><div class="step-text">φ(n) = (p−1)(q−1) = ${p-1} × ${q-1} = <b style="color:#f97316">${phi}</b></div></div>
+      <div class="step-row"><div class="step-n">3</div><div class="step-text">Public key e = <b style="color:#f97316">${e}</b> &nbsp;[gcd(${e}, ${phi}) = 1 ✓]</div></div>
+      <div class="step-row"><div class="step-n">4</div><div class="step-text">Private key d = <b style="color:#f97316">${d}</b> &nbsp;[${d} × ${e} mod ${phi} = ${(d*e)%phi} ≡ 1 ✓]</div></div>
+      <div class="step-row"><div class="step-n">5</div><div class="step-text">Each character → ASCII code M → C = M<sup>e</sup> mod n (see table)</div></div>
+      <div class="step-row"><div class="step-n">6</div><div class="step-text">Ciphertext string: <b style="color:#f97316">${rows.map(r=>r.C).join(' ')}</b></div></div>
+    </div>`;
+
+    const body = document.getElementById('rsa-output-body');
+    body.innerHTML = [
+      outRow('Input Text', `<span style="color:#fb923c;font-size:16px;font-weight:600;">${charText}</span>`),
+      outRow('Public Key (n, e)', `<span style="color:#fb923c">( ${n}, ${e} )</span>`),
+      outRow('Private Key (n, d)', `<span style="color:#fb923c">( ${n}, ${d} )</span>`),
+      `<div class="out-row"><div class="out-key">Steps</div><div class="out-val" style="font-size:12px">${stepsHTML}</div></div>`,
+      `<div class="out-row"><div class="out-key">Per-Char Table</div><div class="out-val" style="padding:0;">${tableHTML}</div></div>`,
+      outRow('Ciphertext (space-sep.)', `<span class="big" style="color:#f97316">${rows.map(r=>r.C).join(' ')}</span>`),
+    ].join('');
+
+    document.getElementById('rsa-output').classList.add('visible');
+    return;
+  }
+
+  // Single number mode (original behaviour)
+  const M = parseInt(mRaw);
+  if (isNaN(M)) return showError('rsa-error', 'Enter a numeric message M or type a character above.');
+  if (M >= n || M < 1) return showError('rsa-error', `Message M must be between 1 and n-1 = ${n-1}.`);
+
+  const C = modpow(M, e, n);
+  const decM = modpow(C, d, n);
+
+  // Show what character M represents, if printable ASCII
+  const charHint = (M >= 32 && M <= 126) ? ` &nbsp;<span style="color:var(--muted2);font-size:12px;">(ASCII '${String.fromCharCode(M)}')</span>` : '';
+
+  const stepsHTML = `<div class="steps-box">
+    <div class="step-row"><div class="step-n">1</div><div class="step-text">n = p × q = ${p} × ${q} = <b style="color:#f97316">${n}</b></div></div>
+    <div class="step-row"><div class="step-n">2</div><div class="step-text">φ(n) = (p−1)(q−1) = ${p-1} × ${q-1} = <b style="color:#f97316">${phi}</b></div></div>
+    <div class="step-row"><div class="step-n">3</div><div class="step-text">Public key e = <b style="color:#f97316">${e}</b> &nbsp;[gcd(${e}, ${phi}) = ${gcd(e,phi)} ✓]</div></div>
+    <div class="step-row"><div class="step-n">4</div><div class="step-text">Private key d: &nbsp;d × e ≡ 1 (mod φ(n)) &nbsp;→&nbsp; d = <b style="color:#f97316">${d}</b> &nbsp;[verify: ${d} × ${e} mod ${phi} = ${(d*e) % phi} ≡ 1 ✓]</div></div>
+    <div class="step-row"><div class="step-n">5</div><div class="step-text">Encrypt: C = M<sup>e</sup> mod n = ${M}<sup>${e}</sup> mod ${n} = <b style="color:#f97316">${C}</b></div></div>
+    <div class="step-row"><div class="step-n">6</div><div class="step-text">Decrypt: M = C<sup>d</sup> mod n = ${C}<sup>${d}</sup> mod ${n} = <b style="color:#4ade80">${decM}</b> ${decM===M?'✓':'✗'}</div></div>
+  </div>`;
+
+  const body = document.getElementById('rsa-output-body');
+  body.innerHTML = [
+    outRow('Primes p, q', `<span style="color:#f97316">${p}</span> &nbsp;,&nbsp; <span style="color:#f97316">${q}</span>`),
+    outRow('n = p × q', `<span class="big" style="color:#f97316">${n}</span>`),
+    outRow('φ(n) = (p−1)(q−1)', `<span style="color:#f97316">${phi}</span>`),
+    outRow('Public Key (n, e)', `<span style="color:#fb923c">( ${n}, ${e} )</span>`),
+    outRow('Private Key (n, d)', `<span style="color:#fb923c">( ${n}, ${d} )</span>`),
+    `<div class="out-row"><div class="out-key">Steps</div><div class="out-val" style="font-size:12px">${stepsHTML}</div></div>`,
+    outRow('Message M', `<span style="color:#e2e8f0">${M}</span>${charHint}`),
+    outRow('Ciphertext C', `<span class="big" style="color:#f97316">${C}</span>`),
+    outRow('Decrypted M', `<span class="big" style="color:#4ade80">${decM} ✓</span>`),
+  ].join('');
+
+  document.getElementById('rsa-output').classList.add('visible');
+}
+
+/* Enter key support */
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const active = document.querySelector('.panel.active');
+  if (active.id === 'hill-panel') runHill();
+  else if (active.id === 'rail-panel') runRail();
+  else runRSA();
+});
+</script>
+</body>
+</html>
